@@ -5,14 +5,14 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import AppsIcon from "@mui/icons-material/Apps";
 
-export const Header = ({ userPhoto }) => {
+const Header = ({ userPhoto, onLogout }) => {
   return (
     <div className="flex justify-between items-center p-4 bg-gray-100 border-b border-gray-300">
       <div className="flex items-center">
         <img src={GDdriveLogo} alt="Google Drive Logo" className="h-6 mr-2" />
         <span className="text-lg font-semibold text-gray-800">Drive</span>
       </div>
-      <div className="flex  items-center justify-center flex-grow">
+      <div className="flex items-center justify-center flex-grow">
         <div className="relative w-full max-w-xl">
           <SearchIcon className="absolute left-3 top-3 text-gray-500" />
           <input
@@ -36,6 +36,12 @@ export const Header = ({ userPhoto }) => {
           alt="User Photo"
           className="h-8 w-8 rounded-full"
         />
+        <button
+          className="rounded-full p-2 text-black hover:bg-sky-600 border-2 border-sky-500 hover:text-white font-semibold transition-colors duration-300"
+          onClick={onLogout}
+        >
+          Logout
+        </button>
       </div>
     </div>
   );

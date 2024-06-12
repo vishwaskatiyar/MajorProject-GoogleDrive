@@ -1,9 +1,10 @@
 import { useState } from "react";
 import AddIcon from "@material-ui/icons/Add";
 import firebase from "firebase";
-import { storage, db } from "../../../firebase";
+import { storage, db, auth } from "../../../firebase";
 import { makeStyles } from "@material-ui/core/styles";
 import Modal from "@material-ui/core/Modal";
+import LinearProgress from "@material-ui/core/LinearProgress";
 
 function getModalStyle() {
   return {
@@ -30,6 +31,8 @@ const NewFile = () => {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState(null);
 
   const handleOpen = () => {
     setOpen(true);
@@ -37,33 +40,57 @@ const NewFile = () => {
 
   const handleClose = () => {
     setOpen(false);
+    setError(null); // Clear any previous error
   };
 
   const handleChange = (e) => {
-    if (e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
+    setError(null); // Clear any previous error when a new file is selected
+    setFile(e.target.files[0]);
   };
 
   const handleUpload = () => {
+    if (!file) {
+      setError("Please select a file to upload.");
+      return;
+    }
+
     setUploading(true);
 
-    storage
-      .ref(`files/${file.name}`)
-      .put(file)
-      .then((snapshot) => {
-        console.log(snapshot);
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      setError("User not authenticated.");
+      setUploading(false);
+      return;
+    }
 
+    const uploadTask = storage
+      .ref(`files/${currentUser.uid}/${file.name}`)
+      .put(file);
+
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress = Math.round(
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+        );
+        setUploadProgress(progress);
+      },
+      (error) => {
+        setError("An error occurred while uploading the file.");
+        setUploading(false);
+      },
+      () => {
         storage
-          .ref("files")
+          .ref(`files/${currentUser.uid}`)
           .child(file.name)
           .getDownloadURL()
           .then((url) => {
             db.collection("myFiles").add({
+              userId: currentUser.uid,
               timestamp: firebase.firestore.FieldValue.serverTimestamp(),
               caption: file.name,
               fileUrl: url,
-              size: snapshot._delegate.bytesTransferred,
+              size: file.size,
             });
 
             setUploading(false);
@@ -72,19 +99,12 @@ const NewFile = () => {
 
             alert("Upload successful!");
           });
-
-        storage
-          .ref("files")
-          .child(file.name)
-          .getMetadata()
-          .then((meta) => {
-            console.log(meta.size);
-          });
-      });
+      }
+    );
   };
 
   return (
-    <div className="newFile p-4 bg-gray-100 rounded-lg shadow-md relative">
+    <div className="newFile p-2 ml-2 bg-gray-100 rounded-full mt-5 border border-sky-200 hover:bg-sky-200 shadow-md relative">
       <div
         className="newFile__container flex items-center cursor-pointer"
         onClick={handleOpen}
@@ -103,12 +123,10 @@ const NewFile = () => {
           style={modalStyle}
           className={`${classes.paper} bg-white p-6 rounded-lg shadow-lg`}
         >
-          <p className="text-lg font-medium mb-4">
-            Select files you want to upload!
-          </p>
-          {uploading ? (
-            <p className="text-blue-500">Uploading...</p>
-          ) : (
+          <p className="text-lg font-medium mb-4">Select a file to upload:</p>
+          {uploading && <LinearProgress value={uploadProgress} />}
+          {error && <p className="text-red-500 mb-4">{error}</p>}
+          {!uploading && (
             <>
               <input type="file" onChange={handleChange} className="mb-4" />
               <button

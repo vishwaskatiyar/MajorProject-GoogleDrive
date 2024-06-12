@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 
 const SidebarItems = ({ arrow, icon, label }) => {
@@ -7,11 +8,17 @@ const SidebarItems = ({ arrow, icon, label }) => {
         {arrow && <ArrowRightIcon />}
       </div>
       <div className="sidebarItems_content flex items-center ">
-        <div className="mr-2 text-gray-600">{icon}</div>{" "}
+        <div className="mr-2 text-gray-600">{icon}</div>
         <p className="text-gray-800">{label}</p>
       </div>
     </div>
   );
+};
+
+SidebarItems.propTypes = {
+  arrow: PropTypes.bool,
+  icon: PropTypes.element,
+  label: PropTypes.string,
 };
 
 export default SidebarItems;
