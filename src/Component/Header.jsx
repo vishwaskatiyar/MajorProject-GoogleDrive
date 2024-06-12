@@ -4,6 +4,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SettingsIcon from "@mui/icons-material/Settings";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import AppsIcon from "@mui/icons-material/Apps";
+import PropTypes from "prop-types";
 
 const Header = ({ userPhoto, onLogout }) => {
   return (
@@ -45,6 +46,10 @@ const Header = ({ userPhoto, onLogout }) => {
       </div>
     </div>
   );
+};
+Header.propTypes = {
+  userPhoto: PropTypes.string.isRequired,
+  onLogout: PropTypes.func.isRequired,
 };
 
 export default Header;
